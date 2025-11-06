@@ -1,0 +1,14 @@
+# Dependencies
+/node_modules
+
+# Environment variables
+.env
+
+# Motia state
+.motia
+
+# Build output
+dist
+
+# Vite temporary files
+vite.config.js.timestamp-*
