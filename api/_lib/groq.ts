@@ -5,11 +5,10 @@ export type GrokCompletionOptions = {
 
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 
-// Minimal shims to keep TypeScript happy without @types/node or DOM libs
-const env: Record<string, string | undefined> =
-  typeof process !== "undefined" && (process as any)?.env
-    ? ((process as any).env as Record<string, string | undefined>)
-    : {};
+// Minimal env shim without referencing 'process' identifier (no @types/node required)
+const env: Record<string, string | undefined> = (
+  ((globalThis as any)?.process?.env) ?? {}
+) as Record<string, string | undefined>;
 const fetchFn: any = (globalThis as any)?.fetch;
 
 export async function generateBusinessReport({ query, depth = 2 }: GrokCompletionOptions): Promise<string> {
