@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Prosora Research Prototype</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+      header { margin-bottom: 1rem; }
+      label { display: block; margin: 0.5rem 0 0.25rem; }
+      input, textarea, select { width: 100%; padding: 0.5rem; }
+      button { margin-top: 1rem; padding: 0.6rem 1rem; }
+      pre { background: #f5f5f7; padding: 1rem; border-radius: 8px; overflow: auto; }
+      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Prosora Deep Research — Vercel Prototype</h1>
+      <p>Enter a topic and generate a compact research brief using Groq.</p>
+      <p><a href="/api/hello" target="_blank">API health check</a></p>
+    </header>
+
+    <section>
+      <label for="query">Topic / Query</label>
+      <textarea id="query" rows="4" placeholder="e.g. Market analysis for AI agents in SMBs"></textarea>
+
+      <div class="row">
+        <div>
+          <label for="depth">Depth</label>
+          <select id="depth">
+            <option value="1">1 (brief)</option>
+            <option value="2" selected>2 (balanced)</option>
+            <option value="3">3 (more details)</option>
+          </select>
+        </div>
+        <div>
+          <label for="requestId">Request ID (optional)</label>
+          <input id="requestId" placeholder="auto-generated" />
+        </div>
+      </div>
+
+      <button id="run">Generate Report</button>
+    </section>
+
+    <section style="margin-top:2rem;">
+      <h2>Result</h2>
+      <pre id="output">No request yet.</pre>
+    </section>
+
+    <script>
+      const el = (id) => document.getElementById(id);
+      el('run').addEventListener('click', async () => {
+        const query = el('query').value.trim();
+        const depth = parseInt(el('depth').value, 10);
+        if (!query) { alert('Please enter a topic'); return; }
+        el('output').textContent = 'Running...';
+        try {
+          const resp = await fetch('/api/research', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query, depth })
+          });
+          const json = await resp.json();
+          if (!resp.ok) {
+            el('output').textContent = JSON.stringify(json, null, 2);
+            return;
+          }
+          if (json.requestId) el('requestId').value = json.requestId;
+          el('output').textContent = JSON.stringify(json, null, 2);
+        } catch (e) {
+          el('output').textContent = 'Error: ' + (e?.message || e);
+        }
+      });
+    </script>
+  </body>
+  </html>
