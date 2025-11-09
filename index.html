@@ -4,57 +4,112 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Prosora Research Prototype</title>
-    <style>
-      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
-      header { margin-bottom: 1rem; }
-      label { display: block; margin: 0.5rem 0 0.25rem; }
-      input, textarea, select { width: 100%; padding: 0.5rem; }
-      button { margin-top: 1rem; padding: 0.6rem 1rem; }
-      pre { background: #f5f5f7; padding: 1rem; border-radius: 8px; overflow: auto; }
-      .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
   </head>
-  <body>
-    <header>
-      <h1>Prosora Deep Research — Vercel Prototype</h1>
-      <p>Enter a topic and generate a compact research brief using Groq.</p>
-      <p><a href="/api/hello" target="_blank">API health check</a></p>
-    </header>
+  <body class="bg-gray-50 text-gray-900">
+    <div class="max-w-4xl mx-auto p-6">
+      <header class="mb-6">
+        <h1 class="text-2xl font-semibold">Prosora Deep Research — Vercel Prototype</h1>
+        <p class="text-sm text-gray-600">Enter a topic to generate a concise, structured research brief using Groq.</p>
+        <p class="mt-1 text-sm"><a class="text-blue-600 hover:underline" href="/api/hello" target="_blank">API health check</a></p>
+      </header>
 
-    <section>
-      <label for="query">Topic / Query</label>
-      <textarea id="query" rows="4" placeholder="e.g. Market analysis for AI agents in SMBs"></textarea>
+      <section class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+        <label for="query" class="block text-sm font-medium">Topic / Query</label>
+        <textarea id="query" rows="4" placeholder="e.g. Market analysis for AI agents in SMBs" class="mt-1 w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
 
-      <div class="row">
-        <div>
-          <label for="depth">Depth</label>
-          <select id="depth">
-            <option value="1">1 (brief)</option>
-            <option value="2" selected>2 (balanced)</option>
-            <option value="3">3 (more details)</option>
-          </select>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-3">
+          <div>
+            <label for="depth" class="block text-sm font-medium">Depth</label>
+            <select id="depth" class="mt-1 w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="1">1 (brief)</option>
+              <option value="2" selected>2 (balanced)</option>
+              <option value="3">3 (more details)</option>
+            </select>
+          </div>
+          <div>
+            <label for="requestId" class="block text-sm font-medium">Request ID</label>
+            <input id="requestId" placeholder="auto-generated" class="mt-1 w-full rounded-lg border border-gray-300 p-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div class="flex items-end">
+            <button id="run" class="w-full inline-flex justify-center items-center gap-2 rounded-lg bg-blue-600 text-white px-4 py-2 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M12 5l7 7-7 7"/></svg>
+              Generate Report
+            </button>
+          </div>
         </div>
-        <div>
-          <label for="requestId">Request ID (optional)</label>
-          <input id="requestId" placeholder="auto-generated" />
+      </section>
+
+      <section class="mt-6">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-lg font-medium">Result</h2>
+          <div class="flex items-center gap-2">
+            <span id="statusBadge" class="hidden text-xs px-2 py-1 rounded-full bg-gray-200 text-gray-700">Idle</span>
+            <button id="copyBtn" class="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-100">Copy</button>
+            <button id="downloadBtn" class="text-sm px-3 py-1 rounded-lg border border-gray-300 hover:bg-gray-100">Download</button>
+          </div>
         </div>
-      </div>
+        <div id="outputContainer" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+          <div id="outputHtml" class="prose prose-sm max-w-none">
+            <p class="text-gray-500">No request yet.</p>
+          </div>
+        </div>
+      </section>
 
-      <button id="run">Generate Report</button>
-    </section>
-
-    <section style="margin-top:2rem;">
-      <h2>Result</h2>
-      <pre id="output">No request yet.</pre>
-    </section>
+      <footer class="mt-8 text-xs text-gray-500">
+        <p>Tip: You can call the API directly at <code>/api/research</code>. Depth controls the level of detail.</p>
+      </footer>
+    </div>
 
     <script>
       const el = (id) => document.getElementById(id);
+
+      function setStatus(text, variant = 'idle') {
+        const badge = el('statusBadge');
+        badge.classList.remove('hidden');
+        badge.textContent = text;
+        const variants = {
+          idle: 'bg-gray-200 text-gray-700',
+          running: 'bg-yellow-200 text-yellow-800',
+          success: 'bg-green-200 text-green-800',
+          error: 'bg-red-200 text-red-800',
+        };
+        badge.className = 'text-xs px-2 py-1 rounded-full ' + (variants[variant] || variants.idle);
+      }
+
+      function renderMarkdown(md) {
+        try {
+          const rawHtml = marked.parse(md || '');
+          return DOMPurify.sanitize(rawHtml);
+        } catch (e) {
+          return `<pre class="whitespace-pre-wrap">${(md || '').replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]))}</pre>`;
+        }
+      }
+
+      el('copyBtn').addEventListener('click', () => {
+        const html = el('outputHtml').innerText;
+        navigator.clipboard.writeText(html).then(() => setStatus('Copied', 'success')).catch(() => setStatus('Copy failed', 'error'));
+      });
+
+      el('downloadBtn').addEventListener('click', () => {
+        const text = el('outputHtml').innerText;
+        const blob = new Blob([text], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `prosora-report-${Date.now()}.md`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
       el('run').addEventListener('click', async () => {
         const query = el('query').value.trim();
         const depth = parseInt(el('depth').value, 10);
         if (!query) { alert('Please enter a topic'); return; }
-        el('output').textContent = 'Running...';
+        setStatus('Running…', 'running');
+        el('outputHtml').innerHTML = '<p class="text-gray-500">Running…</p>';
         try {
           const resp = await fetch('/api/research', {
             method: 'POST',
@@ -63,13 +118,17 @@
           });
           const json = await resp.json();
           if (!resp.ok) {
-            el('output').textContent = JSON.stringify(json, null, 2);
+            setStatus('Error', 'error');
+            el('outputHtml').innerHTML = `<pre class="bg-gray-50 p-3 rounded">${JSON.stringify(json, null, 2)}</pre>`;
             return;
           }
           if (json.requestId) el('requestId').value = json.requestId;
-          el('output').textContent = JSON.stringify(json, null, 2);
+          const report = json.report || '';
+          el('outputHtml').innerHTML = renderMarkdown(report);
+          setStatus('Completed', 'success');
         } catch (e) {
-          el('output').textContent = 'Error: ' + (e?.message || e);
+          setStatus('Error', 'error');
+          el('outputHtml').innerHTML = `<pre class="bg-gray-50 p-3 rounded">Error: ${(e?.message || e)}</pre>`;
         }
       });
     </script>

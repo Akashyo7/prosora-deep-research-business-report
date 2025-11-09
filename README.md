@@ -111,6 +111,20 @@ npx vercel
 - This is a synchronous prototype intended for quick validation. For production-grade multi-step research with progress tracking, use a job queue and persistent storage (e.g., Vercel Queues plus KV/Postgres) and split start/status/report endpoints.
  - If you encounter `model_decommissioned` errors, switch to a supported model (e.g., `llama-3.3-70b-versatile` or `llama-3.1-8b-instant`) and redeploy.
 
+## Frontend UI
+
+- A minimal UI is available at the root (`/`) using TailwindCSS.
+- Enter a topic and depth, click “Generate Report”.
+- Reports render as markdown with headings, lists, and links.
+- Actions: Copy to clipboard, Download as `.md` file.
+
+## Troubleshooting
+
+- `401 Unauthorized`: Ensure `GROQ_API_KEY` is set for Preview/Production.
+- `model_decommissioned`: Set `GROQ_MODEL` to a supported ID and redeploy.
+- `404 on root`: Root now serves `index.html`. If you still see 404, confirm the file exists and is committed.
+- Local dev not starting: Update Vercel CLI (`npm i -g vercel@latest`) and run `npx vercel dev` from the project root.
+
 ### GitHub Setup (for Vercel)
 
 1. Initialize git locally (if not already):
