@@ -72,9 +72,18 @@ This repository includes a minimal serverless API under the `api/` directory for
 - `api/status.ts` — GET endpoint that returns `completed` for the given `requestId` in this synchronous prototype.
 - `api/report.ts` — GET endpoint included for completeness; returns 404 because reports are not persisted in this prototype.
 
+### Default Model and Overrides
+
+- Default model used by the serverless API: `llama-3.3-70b-versatile`.
+- You can override via environment variable: set `GROQ_MODEL` (e.g., `llama-3.1-8b-instant` for lower cost/latency).
+- Groq models may be deprecated over time; check the deprecations page and update `GROQ_MODEL` accordingly.
+
+Reference: Groq deprecations and recommended replacements [0].
+
 ### Environment Variables
 
 - `GROQ_API_KEY` — Your Groq API key. Set this in Vercel Project → Settings → Environment Variables.
+ - `GROQ_MODEL` — Optional. Overrides the default model used by `src/services/groq.service.ts`.
 
 ### Local Dev with Vercel
 
@@ -100,6 +109,7 @@ npx vercel
 ### Notes
 
 - This is a synchronous prototype intended for quick validation. For production-grade multi-step research with progress tracking, use a job queue and persistent storage (e.g., Vercel Queues plus KV/Postgres) and split start/status/report endpoints.
+ - If you encounter `model_decommissioned` errors, switch to a supported model (e.g., `llama-3.3-70b-versatile` or `llama-3.1-8b-instant`) and redeploy.
 
 ### GitHub Setup (for Vercel)
 

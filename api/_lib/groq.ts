@@ -39,7 +39,7 @@ export async function generateBusinessReport({ query, depth = 2 }: GrokCompletio
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: "llama-3.1-70b-versatile",
+      model: "llama-3.3-70b-versatile",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
@@ -50,13 +50,13 @@ export async function generateBusinessReport({ query, depth = 2 }: GrokCompletio
 
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`Grok API error ${resp.status}: ${text}`);
+    throw new Error(`Groq API error ${resp.status}: ${text}`);
   }
 
   const json = await resp.json();
   const content: string | undefined = json?.choices?.[0]?.message?.content;
   if (!content) {
-    throw new Error("No content returned from Grok API");
+    throw new Error("No content returned from Groq API");
   }
 
   return content.trim();

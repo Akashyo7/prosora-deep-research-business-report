@@ -12,7 +12,7 @@ export class GroqService {
   async generate(prompt: string, json: boolean = false): Promise<string> {
     const chatCompletion = await this.groq.chat.completions.create({
       messages: [{ role: 'user', content: prompt }],
-      model: process.env.GROQ_MODEL || 'gemma2-9b-it',
+      model: process.env.GROQ_MODEL || 'llama-3.3-70b-versatile',
       ...(json ? { response_format: { type: 'json_object' } } : {}),
     });
     return chatCompletion.choices[0].message.content || '';
